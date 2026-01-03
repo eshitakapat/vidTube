@@ -114,9 +114,27 @@ const user = await User.findOne({
 
 const logoutUser = asyncHandler(async (req , res) => {
   await User.findByIdAndUpdate(
-    //need to come back after middleware logic
+   req.user._id,
+   {
+    $set: {
+      refreshToken: undefined,
+
+    }
+   },
+   {new: true}
 
   )
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  }
+
+  return res
+  .status(200)
+  .clearCookie("accessToken" , options)
+  .clearCookie("refreshToken" , options)
+  .json(new ApiResponse(200 , {} , "User Logged Out successfully"))
 })
 
 const refreshAccessToken = asyncHandler(async (req , res) => {
@@ -170,4 +188,4 @@ throw new ApiError(401 , "Invalid refresh token")
 
 })
 
-export { registerUser , loginUser , refreshAccessToken }
+export { registerUser , loginUser , refreshAccessToken , logoutUser}
